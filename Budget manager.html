@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            /* Light mode variables */
+            --background-color: #f4f4f9;
+            --container-bg: white;
+            --text-color: #333;
+            --header-bg: #6c63ff;
+            --border-color: #ddd;
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode variables */
+            --background-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --header-bg: #4a4499;
+            --border-color: #444;
+        }
+
+        /* Update existing styles to use variables */
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: white;
+            text-align: center;
+            padding: 1em 0;
+        }
+        .container {
+            width: 80%;
+            margin: 2em auto 100px auto;
+            background: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1.5em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+        table, th, td {
+            border: 1px solid var(--border-color);
+        }
+        th, td {
+            padding: 0.75em;
+            text-align: center;
+        }
+        th {
+            background-color: #6c63ff;
+            color: white;
+        }
+        .balance {
+            text-align: center;
+            margin: 1em 0;
+            font-size: 1.25em;
+            color: var(--text-color);
+        }
+        .form-section {
+            margin: 2em 0;
+        }
+        .form-section input, .form-section select, .form-section button {
+            width: 100%;
+            padding: 0.5em;
+            margin: 0.5em 0;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+        }
+        .form-section button {
+            background-color: #6c63ff;
+            color: white;
+            cursor: pointer;
+        }
+        .form-section button:hover {
+            background-color: #574bd9;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5em;
+            font-size: 1.5em;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-sun"></i>
+    </button>
+
+    <header>
+        <h1>Personal Budget Manager</h1>
+    </header>
+    <div class="container">
+        <div class="balance">
+            <p>Balance: $1000</p>
+            <p>Total Income: $2000</p>
+            <p>Total Expenses: $1000</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Income</td>
+                    <td>$1000</td>
+                    <td>Salary</td>
+                    <td>2024-01-01</td>
+                </tr>
+                <tr>
+                    <td>Expense</td>
+                    <td>$500</td>
+                    <td>Groceries</td>
+                    <td>2024-01-02</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="form-section">
+            <h2>Add Transaction</h2>
+            <form id="transactionForm" onsubmit="addTransaction(event)">
+                <select name="type" required>
+                    <option value="Income">Income</option>
+                    <option value="Expense">Expense</option>
+                </select>
+                <input type="number" name="amount" placeholder="Amount" step="0.01" required>
+                <input type="text" name="description" placeholder="Description" required>
+                <input type="date" name="date" required>
+                <button type="submit">Add Transaction</button>
+            </form>
+            <button onclick="resetTransactions()" style="background-color: #ff6b6b; margin-top: 10px; width: auto; padding: 0.5em 1em;">Reset All Transactions</button>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 20px; position: fixed; bottom: 0; width: 100%; background-color: var(--container-bg); border-top: 1px solid var(--border-color);">
+        <p style="margin: 0;">Developed by <a href="Portfolio.html" class="portfolio-link" style="color: var(--header-bg); text-decoration: none; font-weight: bold;">Christopher Bhattarai</a></p>
+    </footer>
+
+    <script>
+        let transactions = [];
+        
+        function updateBalance() {
+            const totalIncome = transactions
+                .filter(t => t.type === 'Income')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            
+            const totalExpense = transactions
+                .filter(t => t.type === 'Expense')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            
+            const balance = totalIncome - totalExpense;
+            
+            document.querySelector('.balance').innerHTML = `
+                <p>Balance: $${balance.toFixed(2)}</p>
+                <p>Total Income: $${totalIncome.toFixed(2)}</p>
+                <p>Total Expenses: $${totalExpense.toFixed(2)}</p>
+            `;
+        }
+
+        function updateTransactionTable() {
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = transactions.map(t => `
+                <tr>
+                    <td>${t.type}</td>
+                    <td>$${parseFloat(t.amount).toFixed(2)}</td>
+                    <td>${t.description}</td>
+                    <td>${t.date}</td>
+                </tr>
+            `).join('');
+        }
+
+        function addTransaction(event) {
+            event.preventDefault();
+            const form = event.target;
+            const transaction = {
+                type: form.type.value,
+                amount: form.amount.value,
+                description: form.description.value,
+                date: form.date.value
+            };
+            
+            transactions.push(transaction);
+            updateBalance();
+            updateTransactionTable();
+            
+            // Save to localStorage
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            
+            // Reset form
+            form.reset();
+        }
+
+        function resetTransactions() {
+            if (confirm('Are you sure you want to reset all transactions?')) {
+                transactions = [];
+                updateBalance();
+                updateTransactionTable();
+                localStorage.removeItem('transactions');
+            }
+        }
+
+        // Load saved transactions on page load
+        window.addEventListener('load', () => {
+            const savedTransactions = localStorage.getItem('transactions');
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+                updateBalance();
+                updateTransactionTable();
+            }
+            
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.querySelector('.theme-toggle i').classList.replace('fa-sun', 'fa-moon');
+            }
+        });
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.querySelector('.theme-toggle i');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+
+            localStorage.setItem('theme', body.getAttribute('data-theme') || 'light');
+        }
+    </script>
+</body>
+</html>
