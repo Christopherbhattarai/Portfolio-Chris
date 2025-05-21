@@ -219,13 +219,69 @@
         .win-message button {
             margin-top: 1rem;
         }
+
+        .mode-selection {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--container-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .mode-selection h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .mode-button {
+            padding: 1rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mode-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .game-container {
+            display: none;
+        }
+
+        .game-container.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <a href="Portfolio.html" class="back-button">← Back to Portfolio</a>
+    <a href="index.html" class="back-button">← Back to Portfolio</a>
     <button id="theme-toggle">🌙</button>
     
-    <div class="game-container">
+    <div class="mode-selection" id="modeSelection">
+        <h2>Select Game Mode</h2>
+        <div class="mode-buttons">
+            <button class="mode-button" onclick="startGame('single')">Single Player</button>
+            <button class="mode-button" onclick="startGame('multi')">Two Players</button>
+        </div>
+    </div>
+
+    <div class="game-container" id="gameContainer">
         <h1>Tic Tac Toe</h1>
         <div class="status" id="status">Player X's turn</div>
         <div class="board" id="board">
@@ -255,9 +311,13 @@
         const status = document.getElementById('status');
         const restartButton = document.getElementById('restart');
         const themeToggle = document.getElementById('theme-toggle');
+        const modeSelection = document.getElementById('modeSelection');
+        const gameContainer = document.getElementById('gameContainer');
+        
         let currentPlayer = 'X';
         let gameActive = true;
         let gameState = ['', '', '', '', '', '', '', '', ''];
+        let gameMode = 'multi'; // 'single' or 'multi'
 
         const winningCombinations = [
             [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -297,6 +357,69 @@
             showWinMessage(`Player ${currentPlayer} wins! 🎉`);
         }
 
+        function startGame(mode) {
+            gameMode = mode;
+            modeSelection.style.display = 'none';
+            gameContainer.classList.add('show');
+            resetGame();
+        }
+
+        function computerMove() {
+            if (!gameActive || currentPlayer !== 'O') return;
+
+            // Try to find a winning move
+            let move = findBestMove();
+            
+            // If no winning move, make a random move
+            if (move === -1) {
+                const emptyCells = gameState.map((cell, index) => cell === '' ? index : null).filter(cell => cell !== null);
+                move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            }
+
+            // Add a small delay to make it feel more natural
+            setTimeout(() => {
+                handleCellClick({ target: cells[move] });
+            }, 500);
+        }
+
+        function findBestMove() {
+            // First, check if computer can win
+            for (let i = 0; i < gameState.length; i++) {
+                if (gameState[i] === '') {
+                    gameState[i] = 'O';
+                    if (checkWin()) {
+                        gameState[i] = '';
+                        return i;
+                    }
+                    gameState[i] = '';
+                }
+            }
+
+            // Then, check if need to block player
+            for (let i = 0; i < gameState.length; i++) {
+                if (gameState[i] === '') {
+                    gameState[i] = 'X';
+                    if (checkWin()) {
+                        gameState[i] = '';
+                        return i;
+                    }
+                    gameState[i] = '';
+                }
+            }
+
+            // Try to take center if available
+            if (gameState[4] === '') return 4;
+
+            // Try to take corners
+            const corners = [0, 2, 6, 8];
+            const availableCorners = corners.filter(corner => gameState[corner] === '');
+            if (availableCorners.length > 0) {
+                return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+            }
+
+            return -1;
+        }
+
         function handleCellClick(e) {
             const cell = e.target;
             const cellIndex = Array.from(cells).indexOf(cell);
@@ -322,6 +445,11 @@
 
             currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
             status.textContent = `Player ${currentPlayer}'s turn`;
+
+            // If single player mode and it's computer's turn
+            if (gameMode === 'single' && currentPlayer === 'O' && gameActive) {
+                computerMove();
+            }
         }
 
         function checkWin() {
@@ -337,7 +465,7 @@
             return gameState.every(cell => cell !== '');
         }
 
-        function restartGame() {
+        function resetGame() {
             currentPlayer = 'X';
             gameActive = true;
             gameState = ['', '', '', '', '', '', '', '', ''];
@@ -347,6 +475,11 @@
                 cell.classList.remove('x', 'o', 'winner');
             });
             document.getElementById('winMessage').classList.remove('show');
+            
+            // If single player mode and computer starts
+            if (gameMode === 'single' && currentPlayer === 'O') {
+                computerMove();
+            }
         }
 
         // Theme toggle functionality
@@ -369,8 +502,16 @@
         });
 
         cells.forEach(cell => cell.addEventListener('click', handleCellClick));
-        restartButton.addEventListener('click', restartGame);
-        document.getElementById('playAgain').addEventListener('click', restartGame);
+        restartButton.addEventListener('click', () => {
+            resetGame();
+            modeSelection.style.display = 'block';
+            gameContainer.classList.remove('show');
+        });
+        document.getElementById('playAgain').addEventListener('click', () => {
+            resetGame();
+            modeSelection.style.display = 'block';
+            gameContainer.classList.remove('show');
+        });
     </script>
 </body>
 </html>
