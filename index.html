@@ -96,6 +96,12 @@
 </head>
 
 <body>
+    <div class="animated-background">
+        <div class="geometric-pattern"></div>
+        <div class="moving-lines"></div>
+        <div class="floating-dots" id="floatingDots"></div>
+    </div>
+
     <!-- Name in top left -->
     <div class="nav-brand">
         <div class="logo-container">
@@ -490,12 +496,6 @@
         <img id="modal-img" src="" alt="Zoomed photo">
     </div>
 
-    <div class="animated-background">
-        <div class="geometric-pattern"></div>
-        <div class="moving-lines"></div>
-        <div class="floating-dots" id="floatingDots"></div>
-    </div>
-
     <!-- Footer Section -->
     <footer>
         <div class="social-links">
@@ -534,6 +534,7 @@
             }
         }
 
+        // Call the function when the page loads
         document.addEventListener('DOMContentLoaded', createDots);
     </script>
 </body>
