@@ -158,12 +158,12 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
 
-.project-item:nth-child(1)::after {
-    content: '🐾';
+.project-item.weather-project::after {
+    content: '🌤️';
 }
 
-.project-item:nth-child(2)::after {
-    content: '🌤️';
+.project-item:nth-child(1)::after {
+    content: '🐾';
 }
 
 .project-item:nth-child(3)::after {
